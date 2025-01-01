@@ -14,10 +14,12 @@ console.log(concatValues("5","6"));
 
 // Session 2: Interface->Object
 // To make an object, we need Interface (for OBJECT)
+// Define structure of an object
 interface UserInterface{
     id: number,
     name: string,
     age?:number, // optional by using "?"
+    // parameter is string, return type is void
     greet(msg:string): void; // why use "void" because we return nothing in the greet function
 }
 // Define Object, User is the object of UserInterface
