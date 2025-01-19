@@ -3,6 +3,8 @@ import { Box, Button, TextField, Typography, Container } from "@mui/material";
 import { AppProvider } from "@toolpad/core/AppProvider";
 import { SignInPage } from "@toolpad/core/SignInPage";
 import { useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const providers = [
   { id: "github", name: "GitHub" },
@@ -12,25 +14,59 @@ const providers = [
   { id: "linkedin", name: "LinkedIn" },
 ];
 
-const signIn = async (provider) => {
-  // Simulating an asynchronous sign-in process
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log(`Sign in with ${provider.id}`);
-      resolve({ error: "This is a fake error" }); // Simulated error response
-    }, 500);
-  });
-};
+// const signIn = async (provider) => {
+//   // Simulating an asynchronous sign-in process
+//   return new Promise((resolve) => {
+//     setTimeout(() => {
+//       console.log(`Sign in with ${provider.id}`);
+//       resolve({ error: "This is a fake error" }); // Simulated error response
+//     }, 500);
+//   });
+// };
 
-const Login = ({ onLogin, onRegister }) => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isModalOpen, setModalOpen] = useState(false); // State for modal visibility
+  const navigate = useNavigate();
 
-  const handleLogin = () => {
-    onLogin(email, password);
+  const signIn = () => {
+    navigate("/home");
   };
 
+  const handleLogin = () => {};
+
   const theme = useTheme();
+
+  const register = () => {
+    navigate("/register");
+  };
+
+  const otherMethod = () => {
+    return <SignInPage signIn={signIn} providers={providers} />;
+  };
+
+  const Modal = ({ onClose, providers }) => {
+    return (
+      <Box
+        sx={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          backgroundColor: "#fff",
+          padding: 4,
+          boxShadow: 3,
+          zIndex: 1000,
+        }}
+      >
+        <Button onClick={onClose} variant="contained" sx={{ mt: 10, ml: 3 }}>
+          Close
+        </Button>
+        <SignInPage signIn={signIn} providers={providers} />
+      </Box>
+    );
+  };
 
   return (
     <AppProvider theme={theme}>
@@ -75,11 +111,24 @@ const Login = ({ onLogin, onRegister }) => {
           >
             Login
           </Button>
-          <Button fullWidth variant="text" sx={{ mt: 1 }} onClick={onRegister}>
+          <Button fullWidth variant="text" sx={{ mt: 1 }} onClick={register}>
             Register
           </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            color="success"
+            sx={{ mt: 1 }}
+            onClick={() => setModalOpen(true)} // Open modal on click
+          >
+            Login With Other Methods
+          </Button>
         </Box>
-        <SignInPage signIn={signIn} providers={providers} />
+
+        {/* Render Modal if isModalOpen is true */}
+        {isModalOpen && (
+          <Modal providers={providers} onClose={() => setModalOpen(false)} />
+        )}
       </Container>
     </AppProvider>
   );

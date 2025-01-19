@@ -5,6 +5,7 @@ import theme from "./components/theme";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import FoodSearch from "./components/FoodSearch";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const App = () => {
   const handleLogin = (email, password) => {
@@ -18,9 +19,13 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Login onLogin={handleLogin} onRegister={handleRegister} />
-      <Register />
-      <FoodSearch />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/home" element={<FoodSearch />} />
+        </Routes>
+      </Router>
     </ThemeProvider>
   );
 };
