@@ -12,6 +12,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Navbar";
+import AllDishes from "../pages/AllDishes";
+import UserRecords from "../pages/UserRecords";
 
 const FoodSearch = ({ onSearch }) => {
   const [query, setQuery] = useState("");
@@ -26,7 +28,8 @@ const FoodSearch = ({ onSearch }) => {
   return (
     <div>
       <Navbar />
-
+      <UserRecords />
+      <hr />
       <Container maxWidth="md" sx={{ mt: 8 }}>
         <Box
           sx={{

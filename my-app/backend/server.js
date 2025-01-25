@@ -12,14 +12,23 @@ app.use(bodyParser.json());
 // Create Database
 const db = new sqlite3.Database("./recipes.db");
 
-// Create tables
+////////////////////////// Create Table  /////////////////////////////
 db.serialize(() => {
   db.run(
-    `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, email TEXT ,password TEXT, gender TEXT ,role TEXT)`
+    `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, email TEXT ,password TEXT, gender TEXT)`
+  );
+  db.run(
+    `CREATE TABLE IF NOT EXISTS admin (id INTEGER PRIMARY KEY, username TEXT, email TEXT, password TEXT)`
+  );
+  db.run(
+    `CREATE TABLE IF NOT EXISTS dish_choices (id INTEGER PRIMARY KEY, name TEXT, restaurant TEXT, protein TEXT, fat TEXT, ingredient_list TEXT)`
+  );
+  db.run(
+    `CREATE TABLE IF NOT EXISTS consumption_record (id INTEGER PRIMARY KEY, mem_id INTEGER, dish_id INTEGER, datetime TEXT, remark TEXT, net_calories INTEGER)`
   );
 });
 
-// Middleware for authentication
+//////////////////////////// Middleware for authentication  /////////////////////////////
 const authenticateToken = (req, res, next) => {
   const token = req.headers["authorization"];
   if (!token) return res.sendStatus(403);
@@ -32,12 +41,13 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
+////////////////////////// Register & Login  /////////////////////////////
 app.post("/register", async (req, res) => {
-  const { username, email, password, gender, role } = req.body;
+  const { username, email, password, gender } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
   db.run(
-    `INSERT INTO users (username, email, password, gender, role) VALUES (?, ?, ?, ?, ?)`,
-    [username, email, hashedPassword, gender, role],
+    `INSERT INTO users (username, email, password, gender) VALUES (?, ?, ?, ?)`,
+    [username, email, hashedPassword, gender],
     (err) => {
       if (err) return res.status(500).send(err.message);
       res.sendStatus(201);
@@ -51,11 +61,12 @@ app.post("/login", (req, res) => {
     `SELECT * FROM users WHERE username = ?`,
     [username],
     async (err, user) => {
+      if (err) return res.status(500).send(err.message);
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(403).send("Invalid credentials");
       }
       const token = jwt.sign(
-        { username: user.username, role: user.role },
+        { username: user.username, role: "user" },
         "secret_key"
       );
       res.json({ token });
@@ -63,21 +74,46 @@ app.post("/login", (req, res) => {
   );
 });
 
-//////////////////////////
-// User
-app.get("/recipes", authenticateToken, (req, res) => {
-  db.all(`SELECT * FROM recipes`, [], (err, rows) => {
-    if (err) return res.status(500).send(err.message);
-    res.json(rows);
-  });
+app.post("/login/admin", (req, res) => {
+  const { username, password } = req.body;
+  db.get(
+    `SELECT * FROM admin WHERE username = ?`,
+    [username],
+    async (err, user) => {
+      if (err) return res.status(500).send(err.message);
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(403).send("Invalid credentials");
+      }
+      const token = jwt.sign(
+        { username: user.username, role: "admin" },
+        "secret_key"
+      );
+      res.json({ token });
+    }
+  );
 });
 
-app.post("/recipes", authenticateToken, (req, res) => {
-  if (req.user.role !== "admin") return res.sendStatus(403);
-  const { mood, recipe } = req.body;
+////////////////////////// User /////////////////////////////
+// User view their consumption record
+app.get("/ViewAllRecords", authenticateToken, (req, res) => {
+  db.all(
+    `SELECT * FROM consumption_record WHERE mem_id = ?`,
+    [req.user.id],
+    (err, rows) => {
+      if (err) return res.status(500).send(err.message);
+      res.json(rows);
+    }
+  );
+});
+
+// User add their consumption record
+app.post("/AddRecord", authenticateToken, (req, res) => {
+  const { dish_id, datetime, remark, net_calories } = req.body;
+  const mem_id = req.user.id;
+
   db.run(
-    `INSERT INTO recipes (mood, recipe) VALUES (?, ?)`,
-    [mood, recipe],
+    `INSERT INTO consumption_record (mem_id, dish_id, datetime, remark, net_calories) VALUES (?, ?, ?, ?, ?)`,
+    [mem_id, dish_id, datetime, remark, net_calories],
     (err) => {
       if (err) return res.status(500).send(err.message);
       res.sendStatus(201);
@@ -85,23 +121,59 @@ app.post("/recipes", authenticateToken, (req, res) => {
   );
 });
 
-app.put("/recipes/:id", authenticateToken, (req, res) => {
+///////////////////////////// Admin /////////////////////////////
+/// Admin/ User views all dishes
+app.get("/allDishes", authenticateToken, (req, res) => {
+  db.all(`SELECT * FROM dish_choices`, [], (err, rows) => {
+    if (err) return res.status(500).send(err.message);
+    res.json(rows);
+  });
+});
+
+// admin add new dish to the database
+app.post("/AddDish", authenticateToken, (req, res) => {
   if (req.user.role !== "admin") return res.sendStatus(403);
 
-  const { id } = req.params; // Get recipe ID from URL
-  const { recipe } = req.body; // Get updated recipe content from body
-
-  if (!id || !recipe) {
-    return res.status(400).send("Missing recipe ID or content.");
-  }
-
-  db.run(`UPDATE recipes SET recipe = ? WHERE id = ?`, [recipe, id], (err) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).send("Database error");
+  const { name, restaurant, protein, fat, ingredient_list } = req.body;
+  db.run(
+    `INSERT INTO dish_choices (name, restaurant, protein, fat, ingredient_list) VALUES (?, ?, ?, ?, ?)`,
+    [name, restaurant, protein, fat, ingredient_list],
+    (err) => {
+      if (err) return res.status(500).send(err.message);
+      res.sendStatus(201);
     }
-    res.sendStatus(200);
-  });
+  );
+});
+
+// admin changes EXISTING dish info
+app.put("/dishes/:id", authenticateToken, (req, res) => {
+  if (req.user.role !== "admin") return res.sendStatus(403);
+
+  const { id } = req.params;
+  const { name, restaurant, protein, fat, ingredient_list } = req.body;
+
+  db.run(
+    `UPDATE dish_choices SET name = ?, restaurant = ?, protein = ?, fat = ?, ingredient_list = ? WHERE id = ?`,
+    [name, restaurant, protein, fat, ingredient_list, id],
+    (err) => {
+      if (err) return res.status(500).send(err.message);
+      res.sendStatus(200);
+    }
+  );
+});
+
+// Admin generates reports on user data
+app.post("/GenerateReport", authenticateToken, (req, res) => {
+  if (req.user.role !== "admin") return res.sendStatus(403);
+
+  db.all(
+    `SELECT * FROM consumption_record JOIN users ON consumption_record.mem_id = users.id`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).send(err.message);
+      res.json(rows);
+    }
+  );
 });
 
 const PORT = 3001;

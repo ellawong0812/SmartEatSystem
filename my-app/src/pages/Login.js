@@ -25,6 +25,8 @@ const providers = [
 // };
 
 const Login = () => {
+  const API_URL = "http://localhost:3001";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isModalOpen, setModalOpen] = useState(false); // State for modal visibility
@@ -34,8 +36,6 @@ const Login = () => {
     navigate("/home");
   };
 
-  const handleLogin = () => {};
-
   const theme = useTheme();
 
   const register = () => {
@@ -44,6 +44,19 @@ const Login = () => {
 
   const otherMethod = () => {
     return <SignInPage signIn={signIn} providers={providers} />;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = [email, password];
+      const response = await axios.post(`${API_URL}/login`, formData);
+      localStorage.setItem("token", response.data.token);
+      alert("Login successful!");
+      navigate("/home");
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
   };
 
   const Modal = ({ onClose, providers }) => {
@@ -107,7 +120,7 @@ const Login = () => {
             variant="contained"
             color="primary"
             sx={{ mt: 2 }}
-            onClick={handleLogin}
+            onClick={handleSubmit}
           >
             Login
           </Button>
@@ -122,6 +135,17 @@ const Login = () => {
             onClick={() => setModalOpen(true)} // Open modal on click
           >
             Login With Other Methods
+          </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            onClick={() => {
+              navigate("/login/admin");
+            }}
+          >
+            Login As Admin
           </Button>
         </Box>
 
