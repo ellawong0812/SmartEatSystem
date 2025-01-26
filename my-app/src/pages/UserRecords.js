@@ -49,6 +49,8 @@ const UserRecords = () => {
 
   // Handle new record submission
   const handleAddRecord = async () => {
+    console.log("Submitting new record:", newRecord); // Debugging
+
     try {
       const token = localStorage.getItem("token");
       await axios.post(`${API_URL}/AddRecord`, newRecord, {
@@ -57,6 +59,12 @@ const UserRecords = () => {
       alert("Record added successfully!");
       setOpen(false);
       fetchRecords(); // Refresh records after adding
+      setNewRecord({
+        dish_id: "",
+        datetime: "",
+        remark: "",
+        net_calories: "",
+      });
     } catch (error) {
       alert("Error adding record: " + error.message);
     }

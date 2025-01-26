@@ -7,20 +7,22 @@ import { Box, Button, TextField, Typography, Container } from "@mui/material";
 
 const LoginAdmin = () => {
   const API_URL = "http://localhost:3001";
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const formData = [email, password];
-      const response = await axios.post(`${API_URL}/login`, formData);
+      const formData = { username, password }; // Send as JSON object
+      const response = await axios.post(`${API_URL}/login/admin`, formData, {
+        headers: { "Content-Type": "application/json" }, // Proper headers
+      });
       localStorage.setItem("token", response.data.token);
       alert("Login successful!");
-      navigate("/home");
+      navigate("/home/admin");
     } catch (error) {
-      alert("Error: " + error.message);
+      alert("Error: " + error.response?.data || error.message);
     }
   };
   return (
@@ -43,11 +45,11 @@ const LoginAdmin = () => {
             </Typography>
             <TextField
               fullWidth
-              label="ITSC Email"
+              label="Username"
               variant="outlined"
               margin="normal"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
             <TextField
               fullWidth

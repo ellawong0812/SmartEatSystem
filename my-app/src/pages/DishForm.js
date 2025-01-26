@@ -33,6 +33,13 @@ const DishForm = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Dish added successfully!");
+      setDishData({
+        name: "",
+        restaurant: "",
+        protein: "",
+        fat: "",
+        ingredient_list: "",
+      });
     } catch (error) {
       alert("Error: " + error.message);
     }
@@ -43,6 +50,10 @@ const DishForm = () => {
       <NavbarAdmin />
 
       <div style={{ paddingLeft: "50px" }}>
+        <p></p>
+        <Typography variant="h4" component="div" fontWeight="bold">
+          Add New Dish
+        </Typography>
         <form onSubmit={addDish}>
           <TextField
             label="Dish Name"

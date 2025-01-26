@@ -28,6 +28,7 @@ const FoodSearch = ({ onSearch }) => {
   return (
     <div>
       <Navbar />
+      <br />
       <UserRecords />
       <hr />
       <Container maxWidth="md" sx={{ mt: 8 }}>

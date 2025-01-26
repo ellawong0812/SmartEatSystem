@@ -8,6 +8,8 @@ const bcrypt = require("bcryptjs");
 const app = express();
 
 app.use(bodyParser.json());
+app.use(express.json());
+app.use(cors());
 
 // Create Database
 const db = new sqlite3.Database("./recipes.db");
@@ -40,6 +42,22 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+app.get("/", (req, res) => {
+  res.json({
+    message: "Welcome to the Recipes API",
+    routes: {
+      register: "POST /register",
+      login: "POST /login",
+      viewAllRecords: "GET /ViewAllRecords (auth required)",
+      addRecord: "POST /AddRecord (auth required)",
+      allDishes: "GET /allDishes (auth required)",
+      addDish: "POST /AddDish (auth required, admin only)",
+      updateDish: "PUT /dishes/:id (auth required, admin only)",
+      generateReport: "POST /GenerateReport (auth required, admin only)",
+    },
+  });
+});
+
 // Routes
 ////////////////////////// Register & Login  /////////////////////////////
 app.post("/register", async (req, res) => {
@@ -66,7 +84,7 @@ app.post("/login", (req, res) => {
         return res.status(403).send("Invalid credentials");
       }
       const token = jwt.sign(
-        { username: user.username, role: "user" },
+        { id: user.id, username: user.username, role: "user" },
         "secret_key"
       );
       res.json({ token });
@@ -76,16 +94,22 @@ app.post("/login", (req, res) => {
 
 app.post("/login/admin", (req, res) => {
   const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).send("Username and password are required."); // Add validation
+  }
+
   db.get(
     `SELECT * FROM admin WHERE username = ?`,
     [username],
     async (err, user) => {
-      if (err) return res.status(500).send(err.message);
-      if (!user || !(await bcrypt.compare(password, user.password))) {
+      if (err) return res.status(500).send("Internal Server Error");
+      if (!user) {
         return res.status(403).send("Invalid credentials");
       }
+      // Token generation logic
       const token = jwt.sign(
-        { username: user.username, role: "admin" },
+        { id: user.id, username: user.username, role: "admin" },
         "secret_key"
       );
       res.json({ token });
@@ -110,6 +134,18 @@ app.get("/ViewAllRecords", authenticateToken, (req, res) => {
 app.post("/AddRecord", authenticateToken, (req, res) => {
   const { dish_id, datetime, remark, net_calories } = req.body;
   const mem_id = req.user.id;
+
+  console.log("Adding record with data:", {
+    mem_id,
+    dish_id,
+    datetime,
+    remark,
+    net_calories,
+  }); // Debugging
+
+  if (!dish_id || !datetime || !net_calories) {
+    return res.status(400).send("Missing required fields"); // Validate input
+  }
 
   db.run(
     `INSERT INTO consumption_record (mem_id, dish_id, datetime, remark, net_calories) VALUES (?, ?, ?, ?, ?)`,

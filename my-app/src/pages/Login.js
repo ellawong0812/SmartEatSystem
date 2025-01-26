@@ -27,7 +27,7 @@ const providers = [
 const Login = () => {
   const API_URL = "http://localhost:3001";
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isModalOpen, setModalOpen] = useState(false); // State for modal visibility
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const formData = [email, password];
+      const formData = { username, password };
       const response = await axios.post(`${API_URL}/login`, formData);
       localStorage.setItem("token", response.data.token);
       alert("Login successful!");
@@ -100,11 +100,11 @@ const Login = () => {
           </Typography>
           <TextField
             fullWidth
-            label="ITSC Email"
+            label="Username"
             variant="outlined"
             margin="normal"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
           <TextField
             fullWidth
