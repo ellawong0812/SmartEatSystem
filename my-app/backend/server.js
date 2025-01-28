@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 const app = express();
+const nodemailer = require("nodemailer");
 
 app.use(bodyParser.json());
 app.use(express.json());
@@ -118,6 +119,70 @@ app.post("/login/admin", (req, res) => {
 });
 
 ////////////////////////// User /////////////////////////////
+// Set up email transporter (using Nodemailer)
+const transporter = nodemailer.createTransport({
+  service: "gmail", // Or any email service you are using
+  auth: {
+    user: "your-email@gmail.com",
+    pass: "your-email-password",
+  },
+});
+
+// User Forgot password endpoint
+app.post("/forgot-password", (req, res) => {
+  const { username, email } = req.body;
+  const sql = `SELECT * FROM users WHERE username = ? AND email = ?`;
+
+  db.get(sql, [username, email], (err, row) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (!row) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    // Create a password reset link or token (simple example here)
+    const resetToken = Math.random().toString(36).substring(2, 15);
+
+    // Send the reset link via email
+    const mailOptions = {
+      from: "wongella123@gmail.com",
+      to: email,
+      subject: "Password Reset Request",
+      text: `Hello ${username},\n\nTo reset your password, click on the following link: \nhttp://localhost:3000/reset-password?token=${resetToken}\n\nIf you did not request this, please ignore this email.`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        return res.status(500).json({ message: "Error sending email", error });
+      }
+      res.json({ message: "Password reset link sent to your email." });
+    });
+  });
+});
+
+// User search the calories of the food has
+// API Endpoint to search dishes
+app.get("/dishes", (req, res) => {
+  const { name } = req.query;
+
+  if (!name) {
+    return res.status(400).send({ error: "Food name is required." });
+  }
+
+  const query = `SELECT * FROM dish_choices WHERE name LIKE ?`;
+  const queryParams = [`%${name}%`]; // Use % for partial matches
+
+  db.all(query, queryParams, (err, rows) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      return res.status(500).send({ error: "Database query failed." });
+    }
+    res.send(rows);
+  });
+});
+
 // User view their consumption record
 app.get("/ViewAllRecords", authenticateToken, (req, res) => {
   db.all(
@@ -155,6 +220,23 @@ app.post("/AddRecord", authenticateToken, (req, res) => {
       res.sendStatus(201);
     }
   );
+});
+
+//User Delete a record by ID
+app.delete("/DeleteRecord/:id", (req, res) => {
+  const { id } = req.params;
+  const sql = `DELETE FROM consumption_record WHERE id = ?`;
+  db.run(sql, [id], function (err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (this.changes === 0) {
+      res.status(404).json({ error: "Record not found" });
+    } else {
+      res.json({ message: "Record deleted successfully" });
+    }
+  });
 });
 
 ///////////////////////////// Admin /////////////////////////////
@@ -208,6 +290,56 @@ app.post("/GenerateReport", authenticateToken, (req, res) => {
     (err, rows) => {
       if (err) return res.status(500).send(err.message);
       res.json(rows);
+    }
+  );
+});
+
+// API Endpoint: Generate Reports
+app.get("/reports", (req, res) => {
+  const reportData = {
+    calorieData: { users: [], netCalories: [] },
+    dishData: { dishes: [], consumptionRate: [] },
+  };
+
+  // Query for calorie consumption
+  db.all(
+    `SELECT u.username, SUM(cr.net_calories) AS total_calories
+     FROM consumption_record cr
+     JOIN users u ON cr.mem_id = u.id
+     GROUP BY u.id`,
+    [],
+    (err, rows) => {
+      if (err) {
+        console.error("Error fetching calorie data:", err);
+        return res.status(500).json({ error: "Failed to fetch calorie data" });
+      }
+
+      rows.forEach((row) => {
+        reportData.calorieData.users.push(row.username);
+        reportData.calorieData.netCalories.push(row.total_calories);
+      });
+
+      // Query for dish consumption rate
+      db.all(
+        `SELECT d.name AS dish_name, COUNT(cr.dish_id) AS consumption_rate
+         FROM consumption_record cr
+         JOIN dish_choices d ON cr.dish_id = d.id
+         GROUP BY d.id`,
+        [],
+        (err, rows) => {
+          if (err) {
+            console.error("Error fetching dish data:", err);
+            return res.status(500).json({ error: "Failed to fetch dish data" });
+          }
+
+          rows.forEach((row) => {
+            reportData.dishData.dishes.push(row.dish_name);
+            reportData.dishData.consumptionRate.push(row.consumption_rate);
+          });
+
+          res.json(reportData);
+        }
+      );
     }
   );
 });

@@ -28,49 +28,82 @@ const LoginAdmin = () => {
   return (
     <div>
       <AppProvider>
-        <Container maxWidth="sm" sx={{ mt: 8 }}>
-          <Box
+        <Box
+          sx={{
+            backgroundColor: "#f5f5f5",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 2,
+          }}
+        >
+          <Typography
+            variant="h3"
             sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              padding: 4,
-              borderRadius: 2,
-              boxShadow: 3,
-              backgroundColor: "#f9f9f9",
+              color: "#0a66fa",
+              fontWeight: "bold",
+              mb: 1,
             }}
           >
-            <Typography variant="h4" sx={{ mb: 4 }}>
-              Login (Admin)
-            </Typography>
-            <TextField
-              fullWidth
-              label="Username"
-              variant="outlined"
-              margin="normal"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              variant="outlined"
-              margin="normal"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              sx={{ mt: 2 }}
-              onClick={handleLogin}
+            Smart Eat System (Admin Panel)
+          </Typography>
+
+          <Container maxWidth="sm" sx={{ mt: 8 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: 4,
+                borderRadius: 2,
+                boxShadow: 3,
+                backgroundColor: "#f9f9f9",
+              }}
             >
-              Login
-            </Button>
-          </Box>
-        </Container>
+              <Typography variant="h4" sx={{ mb: 4 }}>
+                Login
+              </Typography>
+              <TextField
+                fullWidth
+                label="Username"
+                variant="outlined"
+                margin="normal"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <TextField
+                fullWidth
+                label="Password"
+                type="password"
+                variant="outlined"
+                margin="normal"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                sx={{ mt: 2 }}
+                onClick={handleLogin}
+              >
+                Login
+              </Button>
+              <Button
+                fullWidth
+                variant="text"
+                sx={{ mt: 2 }}
+                onClick={() => {
+                  navigate("/");
+                }}
+              >
+                Back
+              </Button>
+            </Box>
+          </Container>
+        </Box>
       </AppProvider>
     </div>
   );

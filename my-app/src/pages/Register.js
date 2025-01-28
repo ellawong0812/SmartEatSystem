@@ -43,11 +43,11 @@ const Register = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
+          backgroundColor: "#f5f5f5",
           alignItems: "center",
           padding: 4,
           borderRadius: 2,
           boxShadow: 3,
-          backgroundColor: "#f9f9f9",
         }}
       >
         <Typography variant="h5" gutterBottom>

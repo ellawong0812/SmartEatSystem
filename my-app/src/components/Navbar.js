@@ -1,71 +1,124 @@
 import React, { useState } from "react";
 import {
-  Box,
-  Button,
-  TextField,
+  AppBar,
+  Toolbar,
   Typography,
-  Container,
-  Grid,
-  Card,
-  CardContent,
+  IconButton,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Box,
 } from "@mui/material";
+import { Home, ListAlt, Logout } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
-  const logOut = () => {
+  const handleDialogOpen = () => setOpen(true);
+  const handleDialogClose = () => setOpen(false);
+
+  const handleLogOut = () => {
+    setOpen(false);
     navigate("/");
   };
 
-  const [open, setOpen] = React.useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
+  const handleNavigate = (path) => {
+    navigate(path);
   };
 
   return (
-    <div>
-      <React.Fragment>
-        <Button
-          onClick={handleClickOpen}
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }}
-        >
+    <>
+      <AppBar position="static" sx={{ backgroundColor: "#1976d2" }}>
+        <Toolbar>
+          {/* Logo or App Title */}
+          <Typography
+            variant="h6"
+            sx={{
+              flexGrow: 1,
+              cursor: "pointer",
+              fontWeight: "bold",
+              letterSpacing: 1,
+            }}
+            onClick={() => handleNavigate("/home")}
+          >
+            Smart Eat System
+          </Typography>
+
+          {/* Navigation Buttons */}
+          <Button
+            startIcon={<Home />}
+            color="inherit"
+            onClick={() => handleNavigate("/home")}
+            sx={{
+              marginRight: 2,
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+            }}
+          >
+            Home
+          </Button>
+          <Button
+            startIcon={<ListAlt />}
+            color="inherit"
+            onClick={() => handleNavigate("/home/record")}
+            sx={{
+              marginRight: 2,
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+            }}
+          >
+            Record
+          </Button>
+          <Button
+            startIcon={<Logout />}
+            color="inherit"
+            onClick={handleDialogOpen}
+            sx={{
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+            }}
+          >
+            Log Out
+          </Button>
+        </Toolbar>
+      </AppBar>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={open}
+        onClose={handleDialogClose}
+        aria-labelledby="logout-dialog-title"
+        aria-describedby="logout-dialog-description"
+      >
+        <DialogTitle id="logout-dialog-title" sx={{ fontWeight: "bold" }}>
           Log Out
-        </Button>
-        <Dialog
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">{"Log Out"}</DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              Are you sure to log out?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={logOut} autoFocus>
-              Yes
-            </Button>
-            <Button onClick={handleClose}>No</Button>
-          </DialogActions>
-        </Dialog>
-      </React.Fragment>
-    </div>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="logout-dialog-description">
+            Are you sure you want to log out?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleLogOut}
+            variant="contained"
+            color="error"
+            sx={{ textTransform: "capitalize" }}
+          >
+            Yes
+          </Button>
+          <Button
+            onClick={handleDialogClose}
+            variant="outlined"
+            sx={{ textTransform: "capitalize" }}
+          >
+            No
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

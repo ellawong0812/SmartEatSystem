@@ -1,9 +1,23 @@
 import React, { useState } from "react";
-import { Box, Button, TextField, Typography, Container } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Container,
+  Modal,
+  IconButton,
+} from "@mui/material";
 import { AppProvider } from "@toolpad/core/AppProvider";
 import { SignInPage } from "@toolpad/core/SignInPage";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import {
+  Close,
+  Login as LoginIcon,
+  PersonAdd,
+  AdminPanelSettings,
+} from "@mui/icons-material";
 import axios from "axios";
 
 const providers = [
@@ -14,39 +28,22 @@ const providers = [
   { id: "linkedin", name: "LinkedIn" },
 ];
 
-// const signIn = async (provider) => {
-//   // Simulating an asynchronous sign-in process
-//   return new Promise((resolve) => {
-//     setTimeout(() => {
-//       console.log(`Sign in with ${provider.id}`);
-//       resolve({ error: "This is a fake error" }); // Simulated error response
-//     }, 500);
-//   });
-// };
-
 const Login = () => {
   const API_URL = "http://localhost:3001";
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isModalOpen, setModalOpen] = useState(false); // State for modal visibility
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isForgotPasswordModalOpen, setForgotPasswordModalOpen] =
+    useState(false);
+  const [forgotPasswordData, setForgotPasswordData] = useState({
+    username: "",
+    email: "",
+  });
   const navigate = useNavigate();
-
-  const signIn = () => {
-    navigate("/home");
-  };
-
   const theme = useTheme();
 
-  const register = () => {
-    navigate("/register");
-  };
-
-  const otherMethod = () => {
-    return <SignInPage signIn={signIn} providers={providers} />;
-  };
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const formData = { username, password };
@@ -59,101 +56,216 @@ const Login = () => {
     }
   };
 
-  const Modal = ({ onClose, providers }) => {
-    return (
-      <Box
-        sx={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          backgroundColor: "#fff",
-          padding: 4,
-          boxShadow: 3,
-          zIndex: 1000,
-        }}
-      >
-        <Button onClick={onClose} variant="contained" sx={{ mt: 10, ml: 3 }}>
-          Close
-        </Button>
-        <SignInPage signIn={signIn} providers={providers} />
-      </Box>
-    );
+  const handleRegister = () => navigate("/register");
+  const handleAdminLogin = () => navigate("/login/admin");
+
+  // Handle Forgot Password request
+  const handleForgotPassword = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/forgot-password`,
+        forgotPasswordData
+      );
+      alert("Password reset link has been sent to your email!");
+      setForgotPasswordModalOpen(false);
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
   };
 
   return (
     <AppProvider theme={theme}>
-      <Container maxWidth="sm" sx={{ mt: 8 }}>
-        <Box
+      <Box
+        sx={{
+          backgroundColor: "#f5f5f5",
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 2,
+        }}
+      >
+        <Typography
+          variant="h3"
+          sx={{ color: theme.palette.primary.main, fontWeight: "bold", mb: 1 }}
+        >
+          Smart Eat System
+        </Typography>
+        <Typography variant="h6" sx={{ color: "#555", mb: 4 }}>
+          Start your healthy life today!
+        </Typography>
+        <Container
+          maxWidth="sm"
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: 4,
+            backgroundColor: "#fff",
             borderRadius: 2,
             boxShadow: 3,
-            backgroundColor: "#f9f9f9",
+            padding: 4,
           }}
         >
-          <Typography variant="h4" sx={{ mb: 4 }}>
-            Login
-          </Typography>
-          <TextField
-            fullWidth
-            label="Username"
-            variant="outlined"
-            margin="normal"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            variant="outlined"
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-            onClick={handleSubmit}
-          >
-            Login
-          </Button>
-          <Button fullWidth variant="text" sx={{ mt: 1 }} onClick={register}>
-            Register
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            color="success"
-            sx={{ mt: 1 }}
-            onClick={() => setModalOpen(true)} // Open modal on click
-          >
-            Login With Other Methods
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-            onClick={() => {
-              navigate("/login/admin");
+          <Box
+            component="form"
+            onSubmit={handleLogin}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
             }}
           >
-            Login As Admin
-          </Button>
-        </Box>
+            <Typography variant="h5" sx={{ textAlign: "center", mb: 2 }}>
+              Login
+            </Typography>
+            <TextField
+              fullWidth
+              label="Username"
+              variant="outlined"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              label="Password"
+              type="password"
+              variant="outlined"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              startIcon={<LoginIcon />}
+              sx={{
+                mt: 2,
+                transition: "all 0.3s",
+                "&:hover": {
+                  backgroundColor: theme.palette.primary.dark,
+                },
+              }}
+            >
+              Login
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              startIcon={<PersonAdd />}
+              onClick={handleRegister}
+            >
+              Register
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => setForgotPasswordModalOpen(true)}
+              sx={{ mt: 1 }}
+            >
+              Forgot Password?
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              color="success"
+              onClick={() => setModalOpen(true)}
+              sx={{
+                mt: 1,
+                transition: "all 0.3s",
+                "&:hover": {
+                  backgroundColor: theme.palette.success.dark,
+                },
+              }}
+            >
+              Login with Other Methods
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              color="secondary"
+              startIcon={<AdminPanelSettings />}
+              onClick={handleAdminLogin}
+              sx={{
+                mt: 1,
+                transition: "all 0.3s",
+                "&:hover": {
+                  backgroundColor: theme.palette.secondary.dark,
+                },
+              }}
+            >
+              Login as Admin
+            </Button>
+          </Box>
+        </Container>
 
-        {/* Render Modal if isModalOpen is true */}
-        {isModalOpen && (
-          <Modal providers={providers} onClose={() => setModalOpen(false)} />
-        )}
-      </Container>
+        {/* Modal for Forgot Password */}
+        <Modal
+          open={isForgotPasswordModalOpen}
+          onClose={() => setForgotPasswordModalOpen(false)}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              backgroundColor: "#fff",
+              borderRadius: 2,
+              boxShadow: 24,
+              width: "90%",
+              maxWidth: 400,
+              p: 4,
+            }}
+          >
+            <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
+              Forgot Password
+            </Typography>
+            <TextField
+              fullWidth
+              label="Username"
+              variant="outlined"
+              value={forgotPasswordData.username}
+              onChange={(e) =>
+                setForgotPasswordData({
+                  ...forgotPasswordData,
+                  username: e.target.value,
+                })
+              }
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              variant="outlined"
+              value={forgotPasswordData.email}
+              onChange={(e) =>
+                setForgotPasswordData({
+                  ...forgotPasswordData,
+                  email: e.target.value,
+                })
+              }
+              sx={{ mb: 2 }}
+            />
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={handleForgotPassword}
+            >
+              Submit
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              color="error"
+              onClick={() => setForgotPasswordModalOpen(false)}
+              sx={{ mt: 2 }}
+            >
+              Cancel
+            </Button>
+          </Box>
+        </Modal>
+      </Box>
     </AppProvider>
   );
 };

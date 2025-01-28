@@ -9,8 +9,9 @@ import Register from "./pages/Register";
 import FoodSearch from "./components/FoodSearch";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import DishForm from "./pages/DishForm";
-import Report from "./pages/Report";
+import Report from "./pages/AdminReport";
 import AllDishes from "./pages/AllDishes";
+import UserRecords from "./pages/UserRecords";
 
 const App = () => {
   const API_URL = "http://localhost:3001";
@@ -29,6 +30,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login/admin" element={<LoginAdmin />} />
+          <Route path="/home/record" element={<UserRecords />} />
           <Route path="/home/admin" element={<HomePageAdmin />} />
           <Route path="/dishForm" element={<DishForm />} />
           <Route path="/report" element={<Report />} />

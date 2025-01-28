@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import axios from "axios";
+import Navbar from "../components/Navbar";
 
 const API_URL = "http://localhost:3001";
 
@@ -49,8 +50,6 @@ const UserRecords = () => {
 
   // Handle new record submission
   const handleAddRecord = async () => {
-    console.log("Submitting new record:", newRecord); // Debugging
-
     try {
       const token = localStorage.getItem("token");
       await axios.post(`${API_URL}/AddRecord`, newRecord, {
@@ -70,9 +69,27 @@ const UserRecords = () => {
     }
   };
 
+  // Handle delete record
+  const handleDeleteRecord = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/DeleteRecord/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("Record deleted successfully!");
+      fetchRecords(); // Refresh records after deletion
+    } catch (error) {
+      alert("Error deleting record: " + error.message);
+    }
+  };
+
   return (
     <div>
-      <AppBar position="static" sx={{ mb: 4 }}>
+      <Navbar />
+      <br />
+      <AppBar position="static" sx={{ mb: 4, backgroundColor: "#0a66fa" }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             My Consumption Records
@@ -89,9 +106,6 @@ const UserRecords = () => {
       </AppBar>
 
       <Container>
-        <Typography variant="h4" fontWeight="bold" sx={{ mb: 4 }}>
-          Your Records
-        </Typography>
         <Grid container spacing={3}>
           {records.map((record) => (
             <Grid item xs={12} sm={6} md={4} key={record.id}>
@@ -109,6 +123,15 @@ const UserRecords = () => {
                   <Typography>Date: {record.datetime}</Typography>
                   <Typography>Remark: {record.remark}</Typography>
                   <Typography>Net Calories: {record.net_calories}</Typography>
+                  <Box sx={{ textAlign: "center", mt: 2 }}>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={() => handleDeleteRecord(record.id)}
+                    >
+                      Delete
+                    </Button>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
